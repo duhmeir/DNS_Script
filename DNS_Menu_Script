@@ -1,0 +1,164 @@
+#!/bin/bash
+#NEXT THING TO DO
+#1.MAKE A MENU TO BE ABLE TO EDIT NAMED.CONF
+#2.AFTER EDITING NAMED.CONF COPY OVER FROM /ROOT/CONF/DNS... TO ETC
+#3.CHANGE RESOLV.CONF MAKE STATIC IP DOE
+
+shopt -s -o nounset
+
+function do_pause
+{
+ echo "Press enter to continue"
+ read select
+}
+
+
+function do_main_menu 
+{
+ clear
+ echo "Select an option"
+ echo "Main Menu"
+ echo "(a.DNSSetup"
+ echo "(b.place"
+ echo "(c.holder "
+ echo "(q quit"
+
+ read select
+ case "$select" in
+ a)
+ do_dns_setup
+ do_pause
+ ;;
+ b)
+  echo "doing b"
+  do_pause
+
+ ;;
+ c)
+  echo "doing c"
+  do_pause
+ ;;
+ q)
+  exit
+ ;;
+ *)
+   echo "unknown command"
+   do_pause
+ ;;  
+ esac
+ do_main_menu
+}
+
+
+function do_dns_setup {
+ clear
+ echo "Choose an option"
+ echo "A.Install Bind"
+ echo "B.Create Directory Structures"
+ echo "C.Tree Directory Structures"
+ echo "Copy "
+ echo "(q quit"
+
+ read select
+ case $select in
+ a)
+  do_dns_install
+ ;;
+ b)
+  do_make_root
+  do_pause
+  do_make_cache
+  do_pause
+  do_make_nocache
+  do_pause
+ ;;
+ c)
+  directory_tree
+  do_pause
+ ;;
+ q)
+  clear 
+  return
+ ;;
+ *)
+   echo "unknown command"
+   do_pause
+ ;;  
+ esac
+ do_dns_setup
+}
+
+function directory_tree {
+tree /root/conf
+tree /root/2016
+}
+
+function do_dns_install {
+i=1
+echo "installing bind.."
+ ls -al /etc > before
+ yum install -y bind
+ ls -al /etc > after
+ diff before after
+}
+
+function do_make_root {
+
+echo "Creating directory structures in /root/2016/work/conf..."
+i=0
+echo "Making cache and non-cache"
+while [ $i -lt 9 ]
+
+do
+#mkdir -p /root/2016/work/scripts
+#mkdir -p /root/2016/work/conf/dns/cache-only/v${i}/etc
+#mkdir -p /root/2016/work/conf/dns/cache-only/v${i}/var
+#mkdir -p /root/2016/work/conf/dns/non-cache/v${i}/etc
+#mkdir -p /root/2016/work/conf/dns/non-cache/v${i}/var/named
+
+mkdir -p /root/conf/dns/non-cache/v${i}/etc
+mkdir -p /root/conf/dns/non-cache/v${i}/var
+mkdir -p /root/conf/dns/cache-only/v${i}/etc
+mkdir -p /root/conf/dns/cache-only/v${i}/var/named
+i=$[$i+1]
+done
+}
+
+
+function do_make_cache {
+i=0
+echo "Copying files for cache versions"
+while [ $i -lt 9 ]
+do
+cp -r /var/named/ /root/conf/dns/cache-only/v${i}/var
+cp -r /etc/named.conf /root/conf/dns/cache-only/v${i}/etc
+cp -r /etc/named.iscdlv.key /root/conf/dns/cache-only/v${i}/etc 
+cp -r /etc/named.rfc1912.zones /root/conf/dns/cache-only/v${i}/etc
+cp -r /etc/named.root.key /root/conf/dns/cache-only/v${i}/etc
+#/usr/share/doc/bind-9.8.2/sample
+i=$[$i+1]
+done
+}
+
+function do_make_nocache {
+i=0
+echo "copying files from /etc and /var..."
+echo "first loop"
+while [ $i -lt 9 ]
+do
+cp -r /usr/share/doc/bind-9.8.2/sample/etc/ /root/conf/dns/non-cache/v${i}/etc
+cp -r /usr/share/doc/bind-9.8.2/sample/var/named/ /root/conf/dns/non-cache/v${i}/var/named
+i=$[$i+1]
+done
+}
+
+do_main_menu
+#cache-only comes from etc and var
+#non-cache comes from share/sample
+#keep a version 0 of DNS that you will never change, can set permissions of version 0 to read only
+#dns install - install bind,create diretory structure, tree structure, diff on /etc,copy cache-only from installed /etc and /var files and non cache from share/sample 
+#v1 should be local loopback
+#/etc/resolv.conf give the name of nameserver 127.0.0.1(local loopback)
+#v2 should be static, 10.1.0.202?
+#after installing from the menu you need to change /etc/resolv.conf so find a way to change the line according to which version you installed (static,loopback, I.E nameserver 127.0.0.1 after installing v1, 10.1.0.202 in resolv.conf.
+#local loopback - 
